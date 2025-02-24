@@ -1,6 +1,6 @@
 # PwnHashTool
 
-* hcxtools and hashcat are required
+* golang, hcxtools and hashcat are required
 
 # How to:
 
