@@ -44,5 +44,3 @@ func ParsePotfile(potfilePath string) (string, error) {
 
 	return outputPath, nil
 }
-
-// Author: C0d3-5t3w

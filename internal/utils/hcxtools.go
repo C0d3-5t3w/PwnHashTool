@@ -26,5 +26,3 @@ func RunHcxPcapngTool(inputFile string, options []string) (string, error) {
 
 	return outputFile, nil
 }
-
-// Author: C0d3-5t3w

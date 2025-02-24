@@ -25,5 +25,3 @@ func RunHashcat(hashFile, wordlist string, options []string) (string, error) {
 
 	return potfile, nil
 }
-
-// Author: C0d3-5t3w

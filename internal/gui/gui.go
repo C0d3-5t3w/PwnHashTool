@@ -134,5 +134,3 @@ func Launch(test fyne.App) {
 		window.Show()
 	}
 }
-
-// Author: C0d3-5t3w
