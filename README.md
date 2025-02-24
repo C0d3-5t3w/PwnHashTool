@@ -1,5 +1,7 @@
 # PwnHashTool
 
+* hcxtools and hashcat are required
+
 # How to:
 
 * Download or git clone this repository
