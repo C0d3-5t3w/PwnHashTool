@@ -12,7 +12,6 @@ func RunHcxPcapngTool(inputFile string, options []string) (string, error) {
 		return "", fmt.Errorf("hcxpcapngtool not found in PATH: %v", err)
 	}
 
-	// Create output filename based on input file
 	baseName := filepath.Base(inputFile)
 	outputFile := strings.TrimSuffix(baseName, filepath.Ext(baseName)) + ".hc22000"
 
@@ -27,3 +26,5 @@ func RunHcxPcapngTool(inputFile string, options []string) (string, error) {
 
 	return outputFile, nil
 }
+
+// Author: C0d3-5t3w

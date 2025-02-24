@@ -19,7 +19,6 @@ func Launch(test fyne.App) {
 
 	window := mainApp.NewWindow("PwnHashTool")
 
-	// File inputs
 	pcapInput := widget.NewEntry()
 	pcapInput.SetPlaceHolder("Select PCAP file...")
 	hashInput := widget.NewEntry()
@@ -29,7 +28,6 @@ func Launch(test fyne.App) {
 	potfileInput := widget.NewEntry()
 	potfileInput.SetPlaceHolder("Select potfile...")
 
-	// File selection buttons
 	selectPcap := widget.NewButton("Browse", func() {
 		dialog.ShowFileOpen(func(uri fyne.URIReadCloser, err error) {
 			if uri != nil {
@@ -62,10 +60,8 @@ func Launch(test fyne.App) {
 		}, window)
 	})
 
-	// Status label
 	status := widget.NewLabel("")
 
-	// Action buttons
 	convertButton := widget.NewButton("Convert PCAP", func() {
 		if pcapInput.Text == "" {
 			status.SetText("Error: Please select a PCAP file")
@@ -113,7 +109,6 @@ func Launch(test fyne.App) {
 		}
 	})
 
-	// Layout
 	content := container.NewVBox(
 		widget.NewLabel("1. Convert PCAP:"),
 		container.NewBorder(nil, nil, nil, selectPcap, pcapInput),
@@ -139,3 +134,5 @@ func Launch(test fyne.App) {
 		window.Show()
 	}
 }
+
+// Author: C0d3-5t3w
