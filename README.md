@@ -14,6 +14,8 @@
 
 * sudo make run
 
+* ANY FILES CREATED BY THE APP WILL BE IN THE APPS DIRECTORY
+
 # If you want to give me a tip i accept monero:
 
 462ZrXQjmJnD9hpp55ckEMccGGrLrknSFSxesChuPz2FJ4MeYyyaVkYVrynU1tn2ZgSJGJBHm9ZAMA2jzck5RWhK2aUQKA2
