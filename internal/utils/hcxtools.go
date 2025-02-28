@@ -26,3 +26,31 @@ func RunHcxPcapngTool(inputFile string, options []string) (string, error) {
 
 	return outputFile, nil
 }
+
+func ProcessPcapDirectory(dirPath string, options []string) ([]string, error) {
+	files, err := filepath.Glob(filepath.Join(dirPath, "*.pcap"))
+	if err != nil {
+		return nil, fmt.Errorf("error finding PCAP files: %v", err)
+	}
+
+	pcapngFiles, err := filepath.Glob(filepath.Join(dirPath, "*.pcapng"))
+	if err != nil {
+		return nil, fmt.Errorf("error finding PCAPNG files: %v", err)
+	}
+
+	files = append(files, pcapngFiles...)
+	if len(files) == 0 {
+		return nil, fmt.Errorf("no PCAP/PCAPNG files found in directory")
+	}
+
+	var outputs []string
+	for _, file := range files {
+		output, err := RunHcxPcapngTool(file, options)
+		if err != nil {
+			return outputs, fmt.Errorf("error processing %s: %v", file, err)
+		}
+		outputs = append(outputs, output)
+	}
+
+	return outputs, nil
+}

@@ -1,6 +1,10 @@
 package gui
 
 import (
+	"fmt"
+	"os"
+	"strings"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
@@ -20,26 +24,26 @@ func Launch(test fyne.App) {
 	window := mainApp.NewWindow("PwnHashTool")
 
 	pcapInput := widget.NewEntry()
-	pcapInput.SetPlaceHolder("Select PCAP file...")
+	pcapInput.SetPlaceHolder("Select PCAP file or directory...")
 	hashInput := widget.NewEntry()
-	hashInput.SetPlaceHolder("Select hash file...")
+	hashInput.SetPlaceHolder("Select hash file or directory...")
 	wordlistInput := widget.NewEntry()
 	wordlistInput.SetPlaceHolder("Select wordlist...")
 	potfileInput := widget.NewEntry()
-	potfileInput.SetPlaceHolder("Select potfile...")
+	potfileInput.SetPlaceHolder("Select potfile or directory...")
 
 	selectPcap := widget.NewButton("Browse", func() {
-		dialog.ShowFileOpen(func(uri fyne.URIReadCloser, err error) {
+		dialog.ShowFolderOpen(func(uri fyne.ListableURI, err error) {
 			if uri != nil {
-				pcapInput.SetText(uri.URI().Path())
+				pcapInput.SetText(uri.Path())
 			}
 		}, window)
 	})
 
 	selectHash := widget.NewButton("Browse", func() {
-		dialog.ShowFileOpen(func(uri fyne.URIReadCloser, err error) {
+		dialog.ShowFolderOpen(func(uri fyne.ListableURI, err error) {
 			if uri != nil {
-				hashInput.SetText(uri.URI().Path())
+				hashInput.SetText(uri.Path())
 			}
 		}, window)
 	})
@@ -53,59 +57,117 @@ func Launch(test fyne.App) {
 	})
 
 	selectPotfile := widget.NewButton("Browse", func() {
-		dialog.ShowFileOpen(func(uri fyne.URIReadCloser, err error) {
+		dialog.ShowFolderOpen(func(uri fyne.ListableURI, err error) {
 			if uri != nil {
-				potfileInput.SetText(uri.URI().Path())
+				potfileInput.SetText(uri.Path())
 			}
 		}, window)
 	})
 
-	status := widget.NewLabel("")
+	status := widget.NewMultiLineEntry()
+	status.Disable()
+	status.Wrapping = fyne.TextWrapWord
+	status.TextStyle = fyne.TextStyle{Monospace: true}
 
-	convertButton := widget.NewButton("Convert PCAP", func() {
+	statusScroll := container.NewScroll(status)
+	statusScroll.SetMinSize(fyne.NewSize(380, 100))
+
+	updateStatus := func(text string) {
+		status.SetText(text)
+		status.CursorRow = len(strings.Split(text, "\n")) - 1
+	}
+
+	convertButton := widget.NewButton("Convert PCAP(s)", func() {
 		if pcapInput.Text == "" {
-			status.SetText("Error: Please select a PCAP file")
+			updateStatus("Error: Please select a PCAP file or directory")
 			return
 		}
 
-		status.SetText("Converting PCAP...")
-		if output, err := utils.RunHcxPcapngTool(pcapInput.Text, nil); err != nil {
-			status.SetText("Error: " + err.Error())
+		updateStatus("Converting PCAP file(s)...")
+		fileInfo, err := os.Stat(pcapInput.Text)
+		if err != nil {
+			updateStatus("Error: " + err.Error())
+			return
+		}
+
+		if fileInfo.IsDir() {
+			outputs, err := utils.ProcessPcapDirectory(pcapInput.Text, nil)
+			if err != nil {
+				updateStatus("Error: " + err.Error())
+			} else {
+				updateStatus(fmt.Sprintf("Converted %d files successfully", len(outputs)))
+			}
 		} else {
-			status.SetText("Converted: " + output)
+			if output, err := utils.RunHcxPcapngTool(pcapInput.Text, nil); err != nil {
+				updateStatus("Error: " + err.Error())
+			} else {
+				updateStatus("Converted: " + output)
+			}
 		}
 	})
 
 	parseButton := widget.NewButton("Extract Passwords", func() {
 		if potfileInput.Text == "" {
-			status.SetText("Error: Please select a potfile")
+			updateStatus("Error: Please select a potfile or directory")
 			return
 		}
 
-		if output, err := utils.ParsePotfile(potfileInput.Text); err != nil {
-			status.SetText("Error parsing potfile: " + err.Error())
+		fileInfo, err := os.Stat(potfileInput.Text)
+		if err != nil {
+			updateStatus("Error: " + err.Error())
+			return
+		}
+
+		if fileInfo.IsDir() {
+			outputs, err := utils.ProcessPotfileDirectory(potfileInput.Text)
+			if err != nil {
+				updateStatus("Error: " + err.Error())
+			} else {
+				updateStatus(fmt.Sprintf("Processed %d potfiles successfully", len(outputs)))
+			}
 		} else {
-			status.SetText("Passwords extracted to: " + output)
+			if output, err := utils.ParsePotfile(potfileInput.Text); err != nil {
+				updateStatus("Error parsing potfile: " + err.Error())
+			} else {
+				updateStatus("Passwords extracted to: " + output)
+			}
 		}
 	})
 
 	crackButton := widget.NewButton("Run Hashcat", func() {
 		if hashInput.Text == "" {
-			status.SetText("Error: Please select a hash file")
+			updateStatus("Error: Please select a hash file or directory")
 			return
 		}
 		if wordlistInput.Text == "" {
-			status.SetText("Error: Please select a wordlist")
+			updateStatus("Error: Please select a wordlist")
 			return
 		}
 
-		status.SetText("Running hashcat...")
-		if output, err := utils.RunHashcat(hashInput.Text, wordlistInput.Text, nil); err != nil {
-			status.SetText("Error: " + err.Error())
-			parseButton.Disable()
+		updateStatus("Running hashcat...")
+		fileInfo, err := os.Stat(hashInput.Text)
+		if err != nil {
+			updateStatus("Error: " + err.Error())
+			return
+		}
+
+		if fileInfo.IsDir() {
+			outputs, err := utils.ProcessHashDirectory(hashInput.Text, wordlistInput.Text, nil)
+			if err != nil {
+				updateStatus("Error: " + err.Error())
+				parseButton.Disable()
+			} else {
+				updateStatus(fmt.Sprintf("Processed %d hash files successfully", len(outputs)))
+				parseButton.Enable()
+			}
 		} else {
-			status.SetText("Complete: " + output)
-			parseButton.Enable()
+			if output, err := utils.RunHashcat(hashInput.Text, wordlistInput.Text, nil); err != nil {
+				updateStatus("Error: " + err.Error())
+				parseButton.Disable()
+			} else {
+				updateStatus("Complete: " + output)
+				parseButton.Enable()
+			}
 		}
 	})
 
@@ -122,11 +184,11 @@ func Launch(test fyne.App) {
 		container.NewBorder(nil, nil, nil, selectPotfile, potfileInput),
 		parseButton,
 		widget.NewLabel("Status:"),
-		status,
+		statusScroll,
 	)
 
 	window.SetContent(content)
-	window.Resize(fyne.NewSize(400, 300))
+	window.Resize(fyne.NewSize(400, 500))
 
 	if test == nil {
 		window.ShowAndRun()

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -43,4 +44,26 @@ func ParsePotfile(potfilePath string) (string, error) {
 	}
 
 	return outputPath, nil
+}
+
+func ProcessPotfileDirectory(dirPath string) ([]string, error) {
+	files, err := filepath.Glob(filepath.Join(dirPath, "*.potfile"))
+	if err != nil {
+		return nil, fmt.Errorf("error finding potfiles: %v", err)
+	}
+
+	if len(files) == 0 {
+		return nil, fmt.Errorf("no .potfile files found in directory")
+	}
+
+	var outputs []string
+	for _, file := range files {
+		output, err := ParsePotfile(file)
+		if err != nil {
+			return outputs, fmt.Errorf("error processing %s: %v", file, err)
+		}
+		outputs = append(outputs, output)
+	}
+
+	return outputs, nil
 }

@@ -25,3 +25,25 @@ func RunHashcat(hashFile, wordlist string, options []string) (string, error) {
 
 	return potfile, nil
 }
+
+func ProcessHashDirectory(dirPath, wordlist string, options []string) ([]string, error) {
+	files, err := filepath.Glob(filepath.Join(dirPath, "*.hc22000"))
+	if err != nil {
+		return nil, fmt.Errorf("error finding hash files: %v", err)
+	}
+
+	if len(files) == 0 {
+		return nil, fmt.Errorf("no .hc22000 files found in directory")
+	}
+
+	var outputs []string
+	for _, file := range files {
+		output, err := RunHashcat(file, wordlist, options)
+		if err != nil {
+			return outputs, fmt.Errorf("error processing %s: %v", file, err)
+		}
+		outputs = append(outputs, output)
+	}
+
+	return outputs, nil
+}
